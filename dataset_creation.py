@@ -8,6 +8,7 @@ import time
 import numpy as np
 import re
 from tqdm import tqdm
+from configparser import ConfigParser
 
 ''' Defining all our lists here'''
 artists_clean = []
@@ -20,6 +21,19 @@ artist_id = []
 track_popularity = []
 artists_df = []
 titles_df = []
+
+
+
+''' Defining some important variables like the spotify client id and secret and creating an instance of the spotify's api'''
+configur = ConfigParser()
+configur.read('config.ini')
+client_id = configur['main']['client_id']
+client_secret = configur['main']['client_secret']
+client_credentials_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
+sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager) # sp is the instance of the spotipy api
+sleep_min = 1
+sleep_max = 3
+
 
 ''' Defining all our functions here'''
 def pre_process_text(text):
@@ -45,15 +59,6 @@ def artist_available(query):
         return True
 
 
-
-
-''' Defining some important variables like the spotify client id and secret and creating an instance of the spotify's api'''
-client_id = "72c9f2b9d3344c91af50a24f4144228f"
-client_secret = "249943a9bbb74b9a8bf04bb7fd93790d"
-client_credentials_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
-sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager) # sp is the instance of the spotipy api
-sleep_min = 1
-sleep_max = 3
 
 
 # Reading and Cleaning Data
@@ -120,7 +125,7 @@ for index in tqdm(range(len(spotify_artists))):
 
     request_count+=1
     if request_count % 5 == 0:
-        print(str(request_count) + " artists uris fetched")
+        print(str(request_count) + " records fetched")
         time.sleep(np.random.uniform(sleep_min, sleep_max))
         print('Loop #: {}'.format(request_count))
         print('Elapsed Time: {} seconds'.format(time.time() - start_time))
@@ -138,6 +143,7 @@ track_data.to_csv('track_data.csv')
 
 print('Dataframe with artists,tracks,artist_id,track_id,popularity and track url created...')
 
+os.mkdir('/Users/ytkd/Desktop/downloaded_songs')
 audio_path = '/Users/ytkd/Desktop/downloaded_songs'
 for i,url in enumerate(preview_url):
     if url is not None:
