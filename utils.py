@@ -1,4 +1,3 @@
-''' Importing packages and liraries'''
 from matplotlib import artist
 import pandas as pd
 import spotipy
@@ -11,19 +10,6 @@ import re
 from tqdm import tqdm
 from configparser import ConfigParser
 
-import utils
-
-''' Defining all our lists here'''
-artists_clean = []
-titles_clean = []
-preview_url = [] 
-track_id = []
-artist_id = []
-track_popularity = []
-artists_df = [] 
-titles_df = []
-
-
 ''' Defining some important variables like the spotify client id and secret and creating an instance of the spotify's api'''
 configur = ConfigParser()
 configur.read('config.ini')
@@ -34,35 +20,53 @@ sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager) # sp
 sleep_min = 1
 sleep_max = 3
 
-# Reading and Cleaning Data
-''' Reading our data fronm the csv file with the lang_detect_spacy column as 'en' that is english. '''
-data = pd.read_csv('/Users/ytkd/Desktop/LY_Artist_lyrics_genre_data_from_big5_mft_users_likes_final.csv')
-data = data[data['lang_detect_spacy']=='en']
-sample_dataset = data[:200]
-
-artists = list(sample_dataset['Artist'])
-titles = list(sample_dataset['title'])
 
 
-''' Defining all our functions here'''
+'''
+This method is used to pre-process our text
+'''
 def pre_process_text(text):
     text = text.lower()
     text = re.sub(r'[^\x00-\x7F]+',' ', text)
     return text
 
-''' In is_same_artist function I check whether the artist the we found in our query is the same one from our dataset.'''
-def is_same_artist(query, data, index):
-    if pre_process_text(data[index]) in pre_process_text(query['tracks']['items'][0]['artists'][0]['name']):
-        return True
 
-''' In track_preview_available function I am checking that the query returned by spotify's api is not empty and if its not I check if the preview url is available.'''
+def clean_data(artists,titles):
+    artists_clean = []
+    titles_clean = []
+    for i in tqdm(range(len(artists))):
+        artists_clean.append(pre_process_text(artists[i]))
+        titles_clean.append(pre_process_text(titles[i]))
+    return artists_clean, titles_clean
+
+
+'''
+In is_same_artist_and_title function I check whether the artist the we found in our query is the same one from our dataset.
+'''
+def is_same_artist_and_title(query, artist, title, index):
+    is_same_artist = pre_process_text(artist[index]) in pre_process_text(query['tracks']['items'][0]['artists'][0]['name'])
+    is_same_title = pre_process_text(title[index]) in pre_process_text(query['tracks']['items'][0]['name'])
+    return is_same_artist and is_same_title
+
+
+'''
+In track_preview_available function I am checking that the query returned by spotify's api is not empty and if its not I check if the preview url is available.
+'''
 def track_preview_available(query):
     if query['tracks']['items']:
         if query['tracks']['items'][0]['preview_url']:
             return True
         return True
 
-def extract_track_data(artists_clean, titles_clean):
+
+def extract_track_data(artists_clean, titles_clean,artists,titles):
+
+    preview_url = []
+    track_id = []
+    artist_id = []
+    track_popularity = []
+    artists_df = []
+    titles_df = []
 
     request_count = 0
     start_time = time.time()
@@ -76,7 +80,7 @@ def extract_track_data(artists_clean, titles_clean):
         # even further I check a third condition whether the artist the we found in our query is the same from our dataset.
 
         # if query['tracks']['items'] and query['tracks']['items'][0]['preview_url'] and query['tracks']['items'][0]['artists'][0]['name'] in alpha_artists_titles[index]:
-        if track_preview_available(query) and is_same_artist(query,artists_clean,index):
+        if track_preview_available(query) and is_same_artist_and_title(query,artists,titles,index):
             preview_url.append(query['tracks']['items'][0]['preview_url'])
             track_id.append(query['tracks']['items'][0]['id'])
             artist_id.append(query['tracks']['items'][0]['artists'][0]['id'])
@@ -107,21 +111,10 @@ def extract_track_data(artists_clean, titles_clean):
     track_data['track_url'] = preview_url
 
     print('Dataframe with artists,tracks,artist_id,track_id,popularity and track url created...')
-    return track_data
+    return track_data, preview_url, track_id
 
 
-for i in tqdm(range(len(artists))):
-    artists_clean.append(pre_process_text(artists[i]))
-    titles_clean.append(pre_process_text(titles[i]))
-
-    
-track_data = extract_track_data(artists_clean,titles_clean)
-# Downloading these song data according track id
-track_data.set_index('track_id',inplace=True)
-track_data.to_csv('track_data.csv')
-
-
-def download_songs(preview_url):
+def download_songs(preview_url, track_id):
     audio_path = '/Users/ytkd/Desktop/downloaded_songs'
     if os.path.exists('/Users/ytkd/Desktop/downloaded_songs') is False:
         os.mkdir('/Users/ytkd/Desktop/downloaded_songs')
@@ -132,7 +125,3 @@ def download_songs(preview_url):
             if os.path.exists(f'{audio_path}/{track_id[i][:1]}') is False:
                 os.mkdir(f'{audio_path}/{track_id[i][:1]}')
             open(f"{os.path.join(audio_path,track_id[i][:1],track_id[i]+'.mp3')}", 'wb').write(response.content)  
-
-
-download_songs(preview_url)
-print('Dataset Downloaded ....')
