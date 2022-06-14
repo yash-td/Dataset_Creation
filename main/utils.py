@@ -51,10 +51,6 @@ def clean_data(artists,titles):
 '''
 In this function I check whether the artist and title that we found in our query is the same one from our dataset.
 '''
-# def is_same_artist_and_title(query, artist, title, index):
-#     is_same_artist = pre_process_text(artist[index]) in pre_process_text(query['tracks']['items'][0]['artists'][0]['name'])
-#     is_same_title = pre_process_text(title[index]) in pre_process_text(query['tracks']['items'][0]['name'])
-#     return is_same_artist and is_same_title
 
 def is_same_artist_and_title(query, artist, title, index):
     artist_data = pre_process_text(artist[index])
@@ -63,18 +59,8 @@ def is_same_artist_and_title(query, artist, title, index):
     title_spotify = pre_process_text(query['tracks']['items'][0]['name'])
     is_same_artist = artist_data in artist_spotify or artist_spotify in artist_data
     is_same_title = title_data in title_spotify or title_spotify in title_data
-
-    # is_same_artist = pre_process_text(artist[index]) in pre_process_text(query['tracks']['items'][0]['artists'][0]['name']) 
-    # is_same_title = pre_process_text(title[index]) in pre_process_text(query['tracks']['items'][0]['name'])
     return is_same_artist and is_same_title
 
-    # if pre_process_text(artist[index]) in pre_process_text(query['tracks']['items'][0]['artists'][0]['name']):
-    #     if pre_process_text(title[index]) in pre_process_text(query['tracks']['items'][0]['name']):
-    #         return True
-    #     else:
-    #         return False
-    # else:
-    #     return False
 
 '''
 In track_preview_available function I am checking that the query returned by spotify's api is not empty and if its not

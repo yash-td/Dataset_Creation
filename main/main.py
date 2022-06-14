@@ -17,7 +17,6 @@ artists_clean, titles_clean = clean_data(artists,titles)
 track_data, preview_url, track_id = extract_track_data(artists_clean,titles_clean,artists,titles)
 # Downloading these song data according track id
 track_data.set_index('track_id',inplace=True)
-# track_data.to_csv('track_data.csv')
 track_data.to_excel('track_data.xlsx')
 
 download_songs(preview_url, track_id)
