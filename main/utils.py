@@ -9,6 +9,9 @@ import numpy as np
 import re
 from tqdm import tqdm
 from configparser import ConfigParser
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 ''' Defining some important variables like the spotify client id and secret and creating an instance of the spotify's api'''
 configur = ConfigParser()
@@ -123,7 +126,7 @@ def extract_track_data(artists_clean, titles_clean,artists,titles):
             time.sleep(np.random.uniform(sleep_min, sleep_max))
             # print('Loop #: {}'.format(request_count))
             # print('Elapsed Time: {} seconds'.format(time.time() - start_time))
-    print('Total Time Elapsed: {} seconds'.format(time.time() - start_time))
+    print('Total Time Elapsed in extracting data: {} seconds'.format(time.time() - start_time))
     track_data = pd.DataFrame(artists_df, columns=['artists'])
     track_data['tracks'] = titles_df
     track_data['artist_id'] = artist_id
@@ -144,10 +147,13 @@ def download_songs(preview_url, track_id):
     audio_path = '/Users/ytkd/Desktop/downloaded_songs'
     if os.path.exists('/Users/ytkd/Desktop/downloaded_songs') is False:
         os.mkdir('/Users/ytkd/Desktop/downloaded_songs')
-
-    for i,url in enumerate(preview_url):
-        if url is not None:
-            response = requests.get(url, verify=False)
+    start_time = time.time()
+    for i in tqdm(range(len(preview_url))):
+        if preview_url[i] is not None:
+            response = requests.get(preview_url[i], verify=False)
             if os.path.exists(f'{audio_path}/{track_id[i][:1]}') is False:
                 os.mkdir(f'{audio_path}/{track_id[i][:1]}')
-            open(f"{os.path.join(audio_path,track_id[i][:1],track_id[i]+'.mp3')}", 'wb').write(response.content)  
+            open(f"{os.path.join(audio_path,track_id[i][:1],track_id[i]+'.mp3')}", 'wb').write(response.content)
+            time.sleep(0.01)
+            
+    print('Total Time Elapsed in downloading songs: {} seconds'.format(time.time() - start_time))

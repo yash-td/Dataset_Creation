@@ -6,7 +6,7 @@ from utils import *
 ''' Reading our data fronm the csv file with the lang_detect_spacy column as 'en' that is english. '''
 data = pd.read_csv('/Users/ytkd/Desktop/LY_Artist_lyrics_genre_data_from_big5_mft_users_likes_final.csv')
 data = data[data['lang_detect_spacy']=='en']
-sample_dataset = data[:200]
+sample_dataset = data[:20]
 
 artists = list(sample_dataset['Artist'])
 titles = list(sample_dataset['title'])
@@ -21,7 +21,6 @@ track_data.to_excel('track_data.xlsx')
 
 download_songs(preview_url, track_id)
 print('Dataset Downloaded ....')
-
 
 if __name__ == "__main__":
    print("Executed...")
